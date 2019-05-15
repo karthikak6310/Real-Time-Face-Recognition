@@ -1,0 +1,149 @@
+Code consist of three phases namely: 1. Creating
+                                     2. Training
+                                     3. Detecting
+We are using 2 libraries in this project
+1. Opencv
+2. Numpy
+To train the recognizer we have to find face in a frame so we are using
+Haarcascade frontalface_default.xml file which helps us to detect the face.
+We have to initialize camera object and we are assigning each person with a specific id and we are storing 25 samples of each person to recognize from different angles.
+Now we have to take 25 sample and store them in folder with specific name containing user id and we are writing these in a loop. We are breaking loop when the sample images is 25.
+We have to release camera object and destroy all windows.
+
+EntireCode:-
+Dataset.py
+
+import cv2
+import numpy as np
+faceDetect=cv2.CascadeClassifier(’harscade_frontalface_default.xml’)
+Department of ECE page no: 17
+faceDetect=cv2.CascadeClassifier()
+cam=cv2.VideoCapture(0);
+id=input('enter userId:')
+sampleNum=0;
+While (True):
+ret,img = cam.read();
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+faces = faceDetect. detectMultiScale(gray, 1.3,5 )
+for (x,y,w,h) in faces:
+sampleNum = sampleNum+1;
+cv2.imwrite("dataSet/User."+str(id)+"."+str(sampleNum)+".jpg",gray[y:y+h,x:x+w])
+cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
+cv2.waitKey(1);
+cv2.imshow("Face",img);
+cv2.waitKey( 40 );
+if (sampleNum> 25 ):
+break
+
+cam.release()
+cv2.destroyAllWindows()
+
+6.2 Trainer:
+We are using 4 libraries in this project
+
+1.os(to read directories)
+2.opencv
+3.numpy
+4.Pil.Image(read Images)
+We are loading LBPHFaceRecognizer and harscade frontal face model these are helpful to
+detect faces.
+
+Now we are creating a functions which reads dataSet folder and returns face faces
+Faces is a array which contains the pixel values of face with and Ids is a array containing Ids as arrays.
+Now by using this function we get ids and their faces
+We are training this ids, faces by LBPH Face recognizer and saving in ‘trainer.yml’ file.
+Entire Code:-
+trainer.py
+import os
+import cv2
+
+import numpy as np
+from PIL import Image
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+detector= cv2.CascadeClassifier(" harscade_frontalface_default.xml ");
+path=" dataSet "
+def defImagesWithId (path):
+imagePaths=[os.path.join(path,f) for f in os.listdir(path)]
+faces=[]
+IDs=[]
+for imagePath in imagePaths:
+faceImg=Image.open(imagePath).convert('L');
+faceNp=np.array(faceImg,'uint8')
+ID=int(os.path.split(imagePath)[-1].split('.')[1])
+faces.append(faceNp)
+IDs.append(ID)
+cv2.imshow("training",faceNp)
+cv2.waitKey(10)
+return IDs,faces
+Ids,faces=getImagesWithID(path)
+recognizer.train(faces,np.array(Ids))
+recognizer.save('recognizer/trainingData.yml')
+cv2.destroyAllWindows()
+
+6.3 Detector:
+We are using 3 libraries in this project
+
+1.time
+2.opencv
+3.numpy
+
+We are loading LBPHFaceRecognizer which we saved earlier, and harscade frontal face model these are helpful to detect faces
+We are going to run this in live video streaming so we have to initialize the camera object.
+We have to take each frame and do the process for Person recognition for infinite time so we are using infinite loop.
+We are going to read each frame from camera object and converted it into gray color
+And detecting faces in a frame by using haar cascade frontal face model.
+Department of ECE page no: 22
+Faces contains the coordinates of the faces in a frame. Now we are drawing a rectangle over that face and predicting the face by LBPH face recogniser and showing the respective name for the matching id.
+for(x,y,w,h) in faces:
+cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
+id,conf=recognizer.predict(gray[y:y+h,x:x+w])
+if(conf<50):
+if(id==1):
+id="JVNR"
+elif(id==2):
+id="Karthik"
+elif(id==3):
+id="Phani"
+else:
+id="Unknown"
+cv2.putText(img,str(id),(x,y+h),font,0.55,(0,255,0),1)
+cv2.imshow("Face",img);
+end=time.time()
+print("took "+str((end - start)*1000)+"mil.sec")
+if(cv2.waitKey(1)==ord('q')):
+break;
+We have to release camera object and destroyallwindows.
+
+Entire Code:
+Recogniser.py
+import cv2
+import numpy as np
+import time
+recognizer = cv2.face.LBPHFaceRecognizer_create()
+recognizer.read(" recognizer/trainingData.yml ")
+detector= cv2.CascadeClassifier(" harscade_frontalface_default.xml ")
+cap=cv2.VideoCapture(0)
+While True:
+ret,img=cam.read()
+gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+faces=faceDetect.detectMultiScale(gray,1.3,5);
+for(x,y,w,h) in faces:
+cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
+id,conf=recognizer.predict(gray[y:y+h,x:x+w])
+print(conf)
+if(conf<50):
+if(id==1):
+id="JVNR"
+elif(id==2):
+id="Karthik"
+elif(id==3):
+id="Phani"
+else:
+id="Unknown"
+cv2.putText(img,str(id),(x,y+h),font,0.55,(0,255,0),1)
+
+cv2.imshow("Face",img);
+if(cv2.waitKey(1)==ord('q')):
+Break;
+cam.release()
+cv2.destroyAllWindows()
